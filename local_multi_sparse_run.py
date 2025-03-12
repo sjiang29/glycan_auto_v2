@@ -67,7 +67,7 @@ def convert_string_to_int_list(s):
     for part in parts:
         part = part.strip()
         if part.isdigit():
-            int_list.append(part)
+            int_list.append(int(part))
         elif ("-" in part):
             start = int(part.split("-")[0])
             end = int(part.split("-")[1])

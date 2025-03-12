@@ -40,7 +40,10 @@ class Single_Glycan:
         self.ag_fasta = ag_fasta
     
         self.origin_ag_seq = self.read_ag_fasta()
-        self.native_glycan_pos = native_glycan_pos.replace("+",",")
+        if "+" in native_glycan_pos:
+            self.native_glycan_pos = native_glycan_pos.replace("+",",")
+        else:
+            self.native_glycan_pos = native_glycan_pos
         
     
     

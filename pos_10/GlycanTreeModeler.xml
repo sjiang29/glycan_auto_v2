@@ -1,6 +1,6 @@
 <ROSETTASCRIPTS>
 	<MOVERS>
-		<SimpleGlycosylateMover name="glycosylate" strip_existing="1" positions="2,12,379,581" glycosylation="man5" idealize_glycosylation="0" />
+		<SimpleGlycosylateMover name="glycosylate" strip_existing="1" positions="10,12,379,581" glycosylation="man5" idealize_glycosylation="0" />
 		<GlycanTreeModeler name="model" layer_size="2" window_size="1" rounds="1" refine="false" />
 	</MOVERS>
 	<PROTOCOLS>

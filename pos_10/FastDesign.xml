@@ -1,6 +1,6 @@
 <ROSETTASCRIPTS>
         <TASKOPERATIONS>
-                <ReadResfile name="resfile" filename="s1.resfile" />
+                <ReadResfile name="resfile" filename="s10.resfile" />
         </TASKOPERATIONS>
         <SCOREFXNS>
                 <ScoreFunction name="REF15" weights="ref2015" />
