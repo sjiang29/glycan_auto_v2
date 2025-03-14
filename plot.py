@@ -7,27 +7,24 @@ import numpy as np
 def get_top_n(top_n, sc_file):
     #print(sc_file)
     
-    file = open(sc_file)
-    
+    file = open(sc_file) 
     line = file.readline()
     
     cnt = 1
-    
     scores = []
     
     while line:
-        
-        parts = line.split(" ")
-        if cnt >= 3 and cnt<=152 and len(parts) > 100:
+        if cnt >= 3 and cnt<=102:
+            parts = line.split(":")[1].split()
+            score = parts[0].strip()
             
-            score = 0.0
             try:
-                score = float(parts[4])
+                score = float(score)
                 
             except ValueError:
-                print(parts[4])
-            
-            
+                #print(parts[4])
+                pass
+                       
             scores.append(score)
             
         line = file.readline()
@@ -67,7 +64,7 @@ def get_top_n_for_all(working_dir, sc_file, top_n, start, end):
                     
                     pos_and_scores[int(pos)] = top_n_scores
                     pos_and_scores_50[int(pos)] = scores_50
-                
+    # sort the dict by the keys in ascending order               
     ordered_all = dict(sorted(pos_and_scores.items()))
     ordered_50 = dict(sorted(pos_and_scores_50.items()))
                     
@@ -102,30 +99,30 @@ def compare_top75_and_top50from100(working_dir, sc_file):
             
 
 def make_box_plot(pos_and_scores, dict_name):
-    values = list(pos_and_scores.values())
+    vals = list(pos_and_scores.values())
 
     # Create the box plot
     labels = pos_and_scores.keys()
     plt.figure(figsize = (15, 6))
-    plt.boxplot(values, labels=labels)
+    plt.boxplot(vals, labels=labels)
     plt.title(dict_name, fontsize = 16)
     #plt.figure(figsize = (15, 6))
     plt.xlabel('Amino_acid_position', fontsize = 16)
     #plt.xticks(np.arange(101, 150, 10))
     plt.xticks(rotation=90)
     plt.tick_params(labelsize = 12)
-    plt.ylim(-1000, 4000)
+    plt.ylim(np.min(vals), np.max(vals))
     plt.ylabel('Rosetta_score', fontsize = 16)
     plt.show()
 
 
-def plot_all_for_current_dir(cur_dir, top_n, start, end):
+def plot_all_for_current_dir(cur_dir, top_n, start, end, sasa_file):
     pos_and_scores, pos_and_scores_50, pos_and_avg_score = get_top_n_for_all(cur_dir, "Glyc_score.sc", top_n, start, end)
    
-    pos_and_sasa = read_sasa("per_res_sasa_head_6uig_A")
-    #plot_sasa_vs_score(pos_and_sasa, pos_and_avg_score)
-    #make_box_plot(pos_and_scores, f"Top {top_n} from 150")
-    make_box_plot(pos_and_scores_50, "Top 50 from 100 out of 150")
+    pos_and_sasa = read_sasa(sasa_file)
+    plot_sasa_vs_score(pos_and_sasa, pos_and_avg_score)
+    make_box_plot(pos_and_scores, f"Top {top_n} from 100")
+    # make_box_plot(pos_and_scores_50, "Top 50 from 100 out of 150")
 
 def read_sasa(sasa_file):
     file = open(sasa_file)
@@ -137,7 +134,6 @@ def read_sasa(sasa_file):
         pos = parts[0]
         pos = int(pos.split(" ")[0][3:])
         score = float(parts[1])
-
         pos_and_sasa[pos] = score
 
         line = file.readline()
@@ -159,7 +155,7 @@ def plot_sasa_vs_score(pos_and_sasa, pos_and_avg_score):
     plt.xlabel("Solvent_Accessible_Surface_Area", fontsize = 16 )
     plt.ylabel("Average_Rosetta_score", fontsize = 16)
     plt.tick_params(labelsize = 14)
-    plt.ylim(-1000, 4000)
+    plt.ylim(min(y), max(y))
     plt.show()
 
    
@@ -171,7 +167,8 @@ def main(argv):
     start = int(sys.argv[1])
     end = int(sys.argv[2])
     top_n = int(sys.argv[3])
-    plot_all_for_current_dir(cur_dir, top_n, start, end)
+    sasa_file = sys.argv[4]
+    plot_all_for_current_dir(cur_dir, top_n, start, end, sasa_file)
 
     #compare_top75_and_top50from100(cur_dir, "Glyc_score.sc")
     
