@@ -116,6 +116,49 @@ def make_box_plot(pos_and_scores, dict_name):
     plt.show()
 
 
+'''
+grid of box plot, can be adjusted accordingly
+'''
+def make_box_plot_grid(pos_and_scores, dict_name):
+    # Split data into three parts
+    keys = list(pos_and_scores.keys())  # Extract amino acid positions
+    values = list(pos_and_scores.values())
+
+    # Ensure we have exactly 268 positions
+    # assert len(keys) == 268, "Expected 268 positions, but got {}".format(len(keys))
+
+    # Split data into first 100, second 100, and last 68
+    keys1, values1 = keys[:87], values[:87]  # First 100
+    keys2, values2 = keys[87:174], values[87:174]  # Second 100
+    keys3, values3 = keys[174:], values[174:]  # Last 68
+
+    fig, axes = plt.subplots(3, 1, figsize=(12, 12))  # 3-row, 1-column
+
+    # Define subplots
+    data_splits = [(keys1, values1, "Top 100 Positions"),
+                   (keys2, values2, "Middle 100 Positions"),
+                   (keys3, values3, "Bottom 68 Positions")]
+
+    for i, (keys_split, values_split, title) in enumerate(data_splits):
+        box = axes[i].boxplot(values_split, labels=keys_split, patch_artist=True)
+
+        # Set grey color for each box
+        for patch in box['boxes']:
+            patch.set(facecolor='grey')
+
+        # Formatting
+        #axes[i].set_title(f"{dict_name} - {title}", fontsize=16)
+        #plt.suptitle("Best 75 scores out of 100 across all positions", fontsize = 16)
+        #plt.xlabel('Amino_acid_position', fontsize = 16)
+        #axes[i].set_xlabel('Amino Acid Position', fontsize=14)
+        axes[i].set_xticklabels(keys_split, rotation=90)
+        axes[i].tick_params(labelsize=10)
+        axes[i].set_ylim(-1000, 6000)
+        axes[i].set_ylabel('Rosetta Score', fontsize=14)
+
+    plt.tight_layout()  # Adjust layout to prevent overlap
+    plt.show()     
+
 def plot_all_for_current_dir(cur_dir, top_n, start, end, sasa_file):
     pos_and_scores, pos_and_scores_50, pos_and_avg_score = get_top_n_for_all(cur_dir, "Glyc_score.sc", top_n, start, end)
    
