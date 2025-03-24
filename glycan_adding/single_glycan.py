@@ -197,8 +197,10 @@ class Single_Glycan:
         if self.native_glycan_pos == "-1":
             postions_for_glycan = str(self.glycan_pos)
         else:
-            postions_for_glycan = str(self.glycan_pos) + "," + str(self.native_glycan_pos)
-
+            if self.glycan_pos == 0:
+                postions_for_glycan = str(self.native_glycan_pos)
+            else:             
+                postions_for_glycan = str(self.glycan_pos) + "," + str(self.native_glycan_pos)
         for element in root.iter('SimpleGlycosylateMover'):
                 element.set ("positions", postions_for_glycan)
 
@@ -223,7 +225,10 @@ class Single_Glycan:
 
         GlycanTreeModeler_xml = self.create_GlycanTreeModeler_xml()
 
-        designed_pdb = self.run_fast_design_cmd()
+        if self.glycan_pos == 0:
+            designed_pdb = self.ag_pdb
+        else:
+            designed_pdb = self.run_fast_design_cmd()
 
         print("*****start of adding glycan")
 
