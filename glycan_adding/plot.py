@@ -141,8 +141,12 @@ grid of box plot, can be adjusted accordingly
 '''
 def make_box_plot_grid(pos_and_scores, dict_name, threshold, n_splits):
     pos_and_scores = pick_pos_using_threshold(pos_and_scores, threshold)
+    print_dict(pos_and_scores)
     keys = list(pos_and_scores.keys())  # Extract amino acid positions
     values = list(pos_and_scores.values())
+
+    # Compute the mean of values when key == 0(wild type)
+    avg_value_of_wild = np.mean(pos_and_scores[0]) if 0 in pos_and_scores else None
     
     # Split data into n_splits parts
     split_size = len(keys) // n_splits  # Determine approximate split size
@@ -168,10 +172,16 @@ def make_box_plot_grid(pos_and_scores, dict_name, threshold, n_splits):
             patch.set(facecolor='grey')
         
         # Formatting
-        axes[i].set_xticklabels(keys_split, rotation=90, fontsize=4)
-        axes[i].tick_params(labelsize=6)
+        axes[i].set_xticklabels(keys_split, rotation=0, fontsize=8)
+        axes[i].tick_params(labelsize=8)
         axes[i].set_ylim(np.min(values), np.max(values))
         axes[i].set_ylabel('Rosetta Score', fontsize=14)
+
+        # Add horizontal line at avg_value (if available)
+        if avg_value_of_wild is not None:
+            axes[i].axhline(avg_value_of_wild, color='r', linestyle='dotted', linewidth=1, label=f"Mean (Pos 0) = {avg_value_of_wild:.2f}")
+            axes[i].legend(fontsize=8)
+
         
     # Global figure formatting
     plt.xlabel('Amino Acid Position', fontsize=14)
@@ -208,6 +218,12 @@ def pick_pos_using_threshold(pos_and_scores, threshold):
             updated_pos_and_scores[k] = v
 
     return updated_pos_and_scores
+
+def print_dict(pos_and_score):
+    print(f"----- There are {len(pos_and_score)} amino acid in the dict")
+    for k,v in pos_and_score.items():
+        print(f"pos {k}: avg(mean) score = {statistics.mean(v):.2f}, median score = {statistics.median(v):.2f}")
+    
 def plot_all_for_current_dir(cur_dir, top_n, start, end, threshold, sasa_file):
     pos_and_scores, pos_and_scores_50, pos_and_avg_score = get_top_n_for_all(cur_dir, "Glyc_score.sc", top_n, start, end)
    
@@ -270,5 +286,4 @@ def main(argv):
     
 
 if __name__ == "__main__":
-        main(sys.argv[1:])  
-
+        main(sys.argv[1:])

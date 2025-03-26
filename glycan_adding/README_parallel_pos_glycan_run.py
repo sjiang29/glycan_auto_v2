@@ -30,11 +30,11 @@ Install the necessary Python packages (if not already available).
 The script requires several command-line arguments to specify the number of cores to use, the range of glycan positions to process, the number of antigen structures to generate, and the CSV file containing antigen information.
 
 ## Command-Line Arguments:
-python local_multi_sparse_run.py <num_cores> <positions> <n_struct> <csv_file>
+python parallel_pos_glycan_run.py <num_cores> <positions> <n_struct> <csv_file>
 
 If above one doesn't work, replace python with python3
 	<num_cores>: The number of CPU cores to utilize for parallel processing.
-	<positions>: The positions (1-based) for glycan placement, positions should and ONLY be seperated by comma(see example)
+	<positions>: The positions (1-based) for glycan placement, see example(postion of 0 is used for collecting data for wild type)
 	<n_struct>: The number of structures to generate for each glycan modification.
 	<csv_file>: The CSV file containing antigen information (PDB, FASTA, and native glycan position).
 
@@ -51,7 +51,7 @@ The CSV file (antigens.csv) should contain the following columns:
 	pdb: Path to the antigen PDB file.
 	fasta: Path to the antigen FASTA file.
 	antigen: The name of the antigen.
-	native_glycan_pos: The position of the native glycan on the antigen, if there are multiple native positions there, seperate them using "+"(NO space in between), if none, put "-1" there.
+	native_glycan_pos: The position of the native glycan on the antigen, if there are multiple native positions there, seperate them using "+", if none, put "-1" there.
 	Example antigens.csv:
 		pdb,fasta,antigen,native_glycan_pos
 		antigen1.pdb,antigen1.fasta,antigen1,3+2
