@@ -5,6 +5,23 @@ import statistics
 import numpy as np
 
 def get_top_n(top_n, sc_file):
+    '''
+    Extracts the top n scores from a given Rosetta score file.
+
+    Parameters:
+
+        top_n (int): The number of top scores to extract.
+
+        sc_file (str): The path to the score file.
+
+    Returns:
+
+        list: The top n scores from the file.
+
+        list: The top 50 scores from the first 100 entries.
+
+        list: All extracted scores.
+    '''
     #print(sc_file)
     
     file = open(sc_file) 
@@ -38,7 +55,29 @@ def get_top_n(top_n, sc_file):
     return scores[0:top_n], scores_100[0:50],scores
 
 def get_top_n_for_all(working_dir, sc_file, top_n, start, end):
-    
+    '''
+    Extracts and organizes top scores from multiple subdirectories in a given working directory.
+
+    Parameters:
+
+        working_dir (str): The root directory containing position-based subdirectories.
+
+        sc_file (str): The filename of the score file.
+
+        top_n (int): The number of top scores to extract.
+
+        start (int): The starting amino acid position.
+
+        end (int): The ending amino acid position.
+
+    Returns:
+
+        dict: Ordered dictionary of top n scores for each position.
+
+        dict: Ordered dictionary of top 50 scores from 100 selections.
+
+        dict: Dictionary mapping positions to average scores.
+    '''
     pos_and_scores = {}
     pos_and_scores_50 = {}
     pos_and_avg_score = {}
@@ -96,9 +135,55 @@ def compare_top75_and_top50from100(working_dir, sc_file):
     #plt.legend(loc='upper left')
     plt.figure(figsize=(10,10))
     plt.show()
-            
 
-def make_box_plot(pos_and_scores, dict_name):
+'''
+grid of box plot, can be adjusted accordingly
+'''
+def make_box_plot_grid(pos_and_scores, dict_name, threshold, n_splits):
+    pos_and_scores = pick_pos_using_threshold(pos_and_scores, threshold)
+    keys = list(pos_and_scores.keys())  # Extract amino acid positions
+    values = list(pos_and_scores.values())
+    
+    # Split data into n_splits parts
+    split_size = len(keys) // n_splits  # Determine approximate split size
+    remainder = len(keys) % n_splits  # Handle uneven splits
+    
+    data_splits = []
+    start = 0
+    for i in range(n_splits):
+        end = start + split_size + (1 if i < remainder else 0)  # Distribute remainder across first few splits
+        data_splits.append((keys[start:end], values[start:end], f"Segment {i+1}"))
+        start = end
+    
+    fig, axes = plt.subplots(n_splits, 1, figsize=(16, 3.5 * n_splits))  # Adjust figure size based on n_splits
+    
+    if n_splits == 1:
+        axes = [axes]  # Ensure axes is iterable for a single subplot
+    
+    for i, (keys_split, values_split, title) in enumerate(data_splits):
+        box = axes[i].boxplot(values_split, labels=keys_split, patch_artist=True)
+        
+        # Set grey color for each box
+        for patch in box['boxes']:
+            patch.set(facecolor='grey')
+        
+        # Formatting
+        axes[i].set_xticklabels(keys_split, rotation=90, fontsize=4)
+        axes[i].tick_params(labelsize=6)
+        axes[i].set_ylim(np.min(values), np.max(values))
+        axes[i].set_ylabel('Rosetta Score', fontsize=14)
+        
+    # Global figure formatting
+    plt.xlabel('Amino Acid Position', fontsize=14)
+    plt.suptitle(f"{dict_name} - Box Plot Grid", fontsize=10)
+    plt.subplots_adjust(bottom=0.3)  # Ensure x-axis labels are fully visible
+    plt.tight_layout(rect=[0, 0.03, 1, 0.97])  # Adjust layout to prevent overlap
+    plt.show()
+
+
+def make_box_plot(pos_and_scores, dict_name, threshold):
+
+    pos_and_scores = pick_pos_using_threshold(pos_and_scores, threshold)
     vals = list(pos_and_scores.values())
 
     # Create the box plot
@@ -115,56 +200,22 @@ def make_box_plot(pos_and_scores, dict_name):
     plt.ylabel('Rosetta_score', fontsize = 16)
     plt.show()
 
+def pick_pos_using_threshold(pos_and_scores, threshold):
 
-'''
-grid of box plot, can be adjusted accordingly
-'''
-def make_box_plot_grid(pos_and_scores, dict_name, n_splits):
-    keys = list(pos_and_scores.keys())  # Extract amino acid positions
-    values = list(pos_and_scores.values())
-    
-    # Split data into n_splits parts
-    split_size = len(keys) // n_splits  # Determine approximate split size
-    remainder = len(keys) % n_splits  # Handle uneven splits
-    
-    data_splits = []
-    start = 0
-    for i in range(n_splits):
-        end = start + split_size + (1 if i < remainder else 0)  # Distribute remainder across first few splits
-        data_splits.append((keys[start:end], values[start:end], f"Segment {i+1}"))
-        start = end
-    
-    fig, axes = plt.subplots(n_splits, 1, figsize=(12, 4 * n_splits))  # Adjust figure size based on n_splits
-    
-    if n_splits == 1:
-        axes = [axes]  # Ensure axes is iterable for a single subplot
-    
-    for i, (keys_split, values_split, title) in enumerate(data_splits):
-        box = axes[i].boxplot(values_split, labels=keys_split, patch_artist=True)
-        
-        # Set grey color for each box
-        for patch in box['boxes']:
-            patch.set(facecolor='grey')
-        
-        # Formatting
-        axes[i].set_xticklabels(keys_split, rotation=90, fontsize=6)
-        axes[i].tick_params(labelsize=10)
-        axes[i].set_ylim(-1000, 6000)
-        axes[i].set_ylabel('Rosetta Score', fontsize=14)
-        
-    # Global figure formatting
-    plt.xlabel('Amino Acid Position', fontsize=14)
-    plt.suptitle(f"{dict_name} - Box Plot Grid", fontsize=16)
-    plt.tight_layout()
-    plt.show()
+    updated_pos_and_scores = {}
+    for k, v in pos_and_scores.items():
+        if statistics.mean(v) < threshold:
+            updated_pos_and_scores[k] = v
 
-
-def plot_all_for_current_dir(cur_dir, top_n, start, end, sasa_file):
+    return updated_pos_and_scores
+def plot_all_for_current_dir(cur_dir, top_n, start, end, threshold, sasa_file):
     pos_and_scores, pos_and_scores_50, pos_and_avg_score = get_top_n_for_all(cur_dir, "Glyc_score.sc", top_n, start, end)
    
     pos_and_sasa = read_sasa(sasa_file)
-    plot_sasa_vs_score(pos_and_sasa, pos_and_avg_score)
-    make_box_plot(pos_and_scores, f"Top {top_n} from 100")
+    #plot_sasa_vs_score(pos_and_sasa, pos_and_avg_score)
+    #make_box_plot(pos_and_scores, f"Top {top_n} from 100")
+    num_of_splits = 4
+    make_box_plot_grid(pos_and_scores, f"Top {top_n} from 100 with threshold of {threshold}", threshold, num_of_splits)
     # make_box_plot(pos_and_scores_50, "Top 50 from 100 out of 150")
 
 def read_sasa(sasa_file):
@@ -210,12 +261,14 @@ def main(argv):
     start = int(sys.argv[1])
     end = int(sys.argv[2])
     top_n = int(sys.argv[3])
-    sasa_file = sys.argv[4]
-    plot_all_for_current_dir(cur_dir, top_n, start, end, sasa_file)
+    threshold = int(sys.argv[4])
+    sasa_file = sys.argv[5]
+    plot_all_for_current_dir(cur_dir, top_n, start, end, threshold, sasa_file)
 
     #compare_top75_and_top50from100(cur_dir, "Glyc_score.sc")
     
     
 
 if __name__ == "__main__":
-        main(sys.argv[1:])
+        main(sys.argv[1:])  
+
